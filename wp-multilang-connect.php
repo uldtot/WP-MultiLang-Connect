@@ -9,10 +9,48 @@ Author URI: https://github.com/uldtot/
 License: GPL2
 */
 
+
 // Forhindre direkte adgang til filen
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
+
+function head_render_hreflang_links() {
+    global $post;
+
+    // Retrieve stored hreflang URLs from post meta
+    $hreflang_urls = get_post_meta( $post->ID, 'hrefLangUrls', true );
+
+    // Ensure we have an array of hreflang URLs
+    if ( empty( $hreflang_urls ) || ! is_array( $hreflang_urls ) ) {
+        return; // Exit if no hreflang URLs are available
+    }
+
+    // Get the default site language code and format it for hreflang
+    $default_locale = get_locale();
+    $default_lang_code = substr( $default_locale, 0, 2 ); // Extract the first two letters for the language code
+
+    // Loop through the hreflang URLs and output each alternate link tag
+    foreach ( $hreflang_urls as $lang_code => $url ) {
+        // Skip the default language if it matches the current
+        if ( strtolower( $lang_code ) === strtolower( $default_lang_code ) ) {
+            continue;
+        }
+
+        // Ensure Danish language uses the correct hreflang code 'da' or 'da-DK'
+        if ( strtolower( $lang_code ) === 'dk' ) {
+            $lang_code = 'da'; // Correcting 'dk' to 'da'
+        }
+
+        // Output each alternate language link tag with lowercase hreflang attribute
+        echo '<link rel="alternate" hreflang="' . esc_attr( strtolower( $lang_code ) ) . '" href="' . esc_url( $url ) . '" />' . PHP_EOL;
+    }
+}
+
+// Add the hreflang links to the head
+add_action( 'wp_head', 'head_render_hreflang_links' );
+
+
 
 // Tilføj menu-side
 function gastroimport_create_menu() {
