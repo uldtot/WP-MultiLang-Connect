@@ -3,11 +3,13 @@
 Plugin Name: WP Multilang Connect
 Plugin URI: https://github.com/uldtot/
 Description: A plugin for connecting multiple sites by importing a file with URLs for multilingual
-Version: 1.5
+Version: 1.6
 Author: Kim Vinberg
 Author URI: https://github.com/uldtot/
 License: GPL2
 */
+
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -20,12 +22,13 @@ class WP_Multilang_Connect {
         add_action('admin_menu', [$this, 'create_menu']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('wp', [$this, 'schedule_cron']);
-        add_action('gastroimport_hourly_event', [$this, 'process_cron_job']);
+        add_action('multilangconnect_hourly_event', [$this, 'process_cron_job']);
         register_deactivation_hook(__FILE__, [$this, 'deactivate_cron']);
         add_shortcode('hreflang_links', [$this, 'render_hreflang_links_shortcode']);
         add_filter('wp_nav_menu_items', [$this, 'add_hreflang_links_after_menu'], 10, 2);
 
         require dirname(__FILE__) . "/plugin-update-checker/plugin-update-checker.php";
+
 
         $myUpdateChecker = PucFactory::buildUpdateChecker(
             'https://github.com/uldtot/wp-multiLang-connect/',
@@ -61,10 +64,10 @@ class WP_Multilang_Connect {
 
     public function create_menu() {
         add_menu_page(
-            'GastroImport Plugin',
-            'GastroImport',
+            'Multilang connect Plugin',
+            'Multilang connect',
             'manage_options',
-            'gastroimport',
+            'multilangconnect',
             [$this, 'settings_page'],
             'dashicons-admin-generic',
             20
@@ -72,37 +75,71 @@ class WP_Multilang_Connect {
     }
 
     public function settings_page() {
-        $import_file_url = get_option('gastroimport_import_file', '');
+        $import_file_url = get_option('multilangconnect_import_file', '');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
-            check_admin_referer('gastroimport_save_settings');
+            check_admin_referer('multilangconnect_save_settings');
             $import_file_url = isset($_POST['import_file']) ? sanitize_text_field($_POST['import_file']) : '';
-            update_option('gastroimport_import_file', $import_file_url);
+            update_option('multilangconnect_import_file', $import_file_url);
         }
 
-        include 'templates/settings-page.php'; // Store the HTML for settings page in a separate template file
+        ?>
+
+        <div class="wrap">
+            <h1>GastroImport Indstillinger</h1>
+            <form method="post" action="">
+                <?php wp_nonce_field( 'gastroimport_save_settings' ); ?>
+    
+                <h2>Import File URL</h2>
+                <p>CSV file only. Firt coloumn is the site you are importing the content on. and the next rows are the other sites. First row must beheader with the lang code DK,EN,SE etc.</p>
+                <p>Every hour a cronjob runs and processes the file, when done it will remove the file from the URL below.</p>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="import_file">Importfil-URL:</label></th>
+                        <td><input type="url" id="import_file" name="import_file" value="<?php echo esc_attr( $import_file_url ); ?>" placeholder="https://yourdomain.com/importfile.csv" /></td>
+                    </tr>
+                </table>
+    
+                <p><?php submit_button(); ?></p>
+            </form>
+        </div>
+    
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                $('#add-row').on('click', function() {
+                    var newRow = '<tr><td><input type="text" name="country_code[]" value="" /></td><td><button type="button" class="button remove-row">Fjern</button></td></tr>';
+                    $('#country-code-table tbody').append(newRow);
+                });
+    
+                $(document).on('click', '.remove-row', function() {
+                    $(this).closest('tr').remove();
+                });
+            });
+        </script>
+    
+        <?php
     }
 
     public function register_settings() {
-        register_setting('gastroimport_settings_group', 'gastroimport_import_file');
+        register_setting('multilangconnect_settings_group', 'multilangconnect_import_file');
     }
 
     public function schedule_cron() {
-        if (!wp_next_scheduled('gastroimport_hourly_event')) {
-            wp_schedule_event(time(), 'hourly', 'gastroimport_hourly_event');
+        if (!wp_next_scheduled('multilangconnect_hourly_event')) {
+            wp_schedule_event(time(), 'hourly', 'multilangconnect_hourly_event');
         }
     }
 
     public function deactivate_cron() {
-        $timestamp = wp_next_scheduled('gastroimport_hourly_event');
-        wp_unschedule_event($timestamp, 'gastroimport_hourly_event');
+        $timestamp = wp_next_scheduled('multilangconnect_hourly_event');
+        wp_unschedule_event($timestamp, 'multilangconnect_hourly_event');
     }
 
     public function process_cron_job() {
-        $import_file_url = get_option('gastroimport_import_file');
+        $import_file_url = get_option('multilangconnect_import_file');
         if (!empty($import_file_url)) {
             $this->process_import($import_file_url);
-            update_option('gastroimport_import_file', '');
+            update_option('multilangconnect_import_file', '');
         }
     }
 
