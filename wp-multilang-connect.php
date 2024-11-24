@@ -14,9 +14,8 @@ if (!defined('ABSPATH')) {
 }
 
 class WP_Multilang_Connect {
-    private static $instance = null;
 
-    private function __construct() {
+    public function __construct() {
         add_action('wp_head', [$this, 'render_hreflang_links']);
         add_action('admin_menu', [$this, 'create_menu']);
         add_action('admin_init', [$this, 'register_settings']);
@@ -39,12 +38,6 @@ class WP_Multilang_Connect {
 
     }
 
-    public static function get_instance() {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
 
     public function render_hreflang_links() {
         global $post;
@@ -179,4 +172,5 @@ class WP_Multilang_Connect {
     }
 }
 
-WP_Multilang_Connect::get_instance();
+
+$WP_Multilang_Connect = new WP_Multilang_Connect();
