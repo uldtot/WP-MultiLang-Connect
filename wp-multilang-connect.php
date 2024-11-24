@@ -3,9 +3,9 @@
 Plugin Name: WP Multilang Connect
 Plugin URI: https://github.com/uldtot/
 Description: A plugin for connecting multiple sites by importing a file with URLs for multilingual
-Version: 1.6
+Version: 1.7
 Author: Kim Vinberg
-Author URI: https://github.com/uldtot/
+Author URI: https://dicm.dk
 License: GPL2
 */
 
@@ -88,7 +88,7 @@ class WP_Multilang_Connect {
         <div class="wrap">
             <h1>GastroImport Indstillinger</h1>
             <form method="post" action="">
-                <?php wp_nonce_field( 'gastroimport_save_settings' ); ?>
+                <?php wp_nonce_field( 'multilangconnect_save_settings' ); ?>
     
                 <h2>Import File URL</h2>
                 <p>CSV file only. Firt coloumn is the site you are importing the content on. and the next rows are the other sites. First row must beheader with the lang code DK,EN,SE etc.</p>
